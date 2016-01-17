@@ -1,0 +1,27 @@
+{
+  "name": "node-geocacher",
+  "version": "0.0.1",
+  "description": "Extends node-geocode and provides caching of results into Mongoose",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/semaja2/node-geocacher.git"
+  },
+  "keywords": [
+    "geocode",
+    "geocache"
+  ],
+  "author": "semaja2.net",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/semaja2/node-geocacher/issues"
+  },
+  "homepage": "https://github.com/semaja2/node-geocacher#readme",
+  "dependencies": {
+    "function-rate-limit": "^1.0.1",
+    "mongoose": "^4.3.6"
+  }
+}
