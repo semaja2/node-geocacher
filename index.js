@@ -22,26 +22,35 @@ module.exports = function (geocoder, db, cacheExpiry, rateLimitInterval, rateLim
   var Geocache = mongoose.model('geocache', geocacheSchema);
 
   // Define our functions
-  module.geocode = function(address, callback) {
+  geocode = function(address, callback) {
+    if (callback === undefined) {
+      return new Promise(function(resolve,reject){
+        this.geocode(address,function(err,data){
+          if(err !== null) return reject(err);
+          resolve(data);
+        });
+      })
+    }
+
     Geocache.findOne({address: address}, function(err, cacheEntry) {
       if (err) {
         callback(err, null);
       }
       if (cacheEntry && cacheEntry.coords) {
-        // Checking if cache has expired
         if (cacheEntry.expires < Date.now()) { // Check if entry has expired
-          // Cache has expired
+          console.log('Updating cache')
           cacheEntry.remove() // Remove expired cache entry
           geocodeAndSaveRateLimited(address, function(err, result) {
             callback(err, result)
           })
 
         } else { // Entry still valid!
-          console.log('Cache is still valid')
+          console.log('Returning cache')
           callback(null, cacheEntry.coords)
         }
       } else {
         // No cache for address found, starting geocode
+        console.log('No cache, looking up')
         geocodeAndSaveRateLimited(address, function(err, result) {
           callback(err, result)
         })
@@ -49,27 +58,56 @@ module.exports = function (geocoder, db, cacheExpiry, rateLimitInterval, rateLim
     });
   };
 
-  module.geocodeBatch = function(addresses, callback) {
-    console.log('Not yet implemented')
+  batchGeocode = function(values, callback) {
+    if (callback === undefined) {
+      return new Promise(function(resolve,reject){
+        this.batchGeocode(values,function(err,data){
+          if(err !== null) return reject(err);
+          resolve(data);
+        });
+      })
+    }
+
+    var promises = values.map(function(value) {
+      return this.geocode(value);
+    }, this);
+
+    Promise.all(promises)
+    .then(function(results) {
+      callback(null, results);
+    })
+    .catch(function(err) {
+      callback(err, null);
+    });
   }
+
 
   // Define the rate limited function
   var geocodeAndSaveRateLimited = rateLimit(rateLimitPerInterval, rateLimitInterval, geocodeAndSave) // Ratelimit the caching to prevent the 10 requests per second
-
+  console.log(rateLimitInterval)
+  console.log(rateLimitPerInterval)
   function geocodeAndSave(address, callback) {
     geocoder.geocode(address, function(err, result) {
       console.log('Geocoding for ' + address)
       if (err) {
         callback(err, null)
       } else {
-        var cacheEntry = new Geocache({
-          address: address,
-          coords: {
-            latitude: result[0].latitude,
-            longitude: result[0].longitude
-          },
-          expires: Date.now() + cacheExpiry
-        })
+        if (result[0]) {
+          var cacheEntry = new Geocache({
+            address: address,
+            coords: {
+              latitude: result[0].latitude,
+              longitude: result[0].longitude
+            },
+            expires: Date.now() + cacheExpiry
+          })
+        } else {
+          var cacheEntry = new Geocache({
+            address: address,
+            coords: {},
+            expires: Date.now() + cacheExpiry
+          })
+        }
         cacheEntry.save(function (err, cacheEntry) {
           if (err) console.error(err);
           callback(null, cacheEntry.coords)
@@ -78,5 +116,7 @@ module.exports = function (geocoder, db, cacheExpiry, rateLimitInterval, rateLim
     });
   }
 
+  module.batchGeocode = batchGeocode
+  module.geocode = geocode
   return module;
 };
