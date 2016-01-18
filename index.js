@@ -38,19 +38,16 @@ module.exports = function (geocoder, db, cacheExpiry, rateLimitInterval, rateLim
       }
       if (cacheEntry && cacheEntry.coords) {
         if (cacheEntry.expires < Date.now()) { // Check if entry has expired
-          console.log('Updating cache')
           cacheEntry.remove() // Remove expired cache entry
           geocodeAndSaveRateLimited(address, function(err, result) {
             callback(err, result)
           })
 
         } else { // Entry still valid!
-          console.log('Returning cache')
           callback(null, cacheEntry.coords)
         }
       } else {
         // No cache for address found, starting geocode
-        console.log('No cache, looking up')
         geocodeAndSaveRateLimited(address, function(err, result) {
           callback(err, result)
         })
@@ -84,11 +81,8 @@ module.exports = function (geocoder, db, cacheExpiry, rateLimitInterval, rateLim
 
   // Define the rate limited function
   var geocodeAndSaveRateLimited = rateLimit(rateLimitPerInterval, rateLimitInterval, geocodeAndSave) // Ratelimit the caching to prevent the 10 requests per second
-  console.log(rateLimitInterval)
-  console.log(rateLimitPerInterval)
   function geocodeAndSave(address, callback) {
     geocoder.geocode(address, function(err, result) {
-      console.log('Geocoding for ' + address)
       if (err) {
         callback(err, null)
       } else {
