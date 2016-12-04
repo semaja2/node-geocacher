@@ -6,7 +6,7 @@ module.exports = function (geocoder, db, cacheExpiry, rateLimitInterval, rateLim
   var module = {};
 
   // Connect to geocache database
-  mongoose.connect(db);
+  mongoose.createConnection(db);
 
   // Define out geocacheSchema
   var geocacheSchema = mongoose.Schema({

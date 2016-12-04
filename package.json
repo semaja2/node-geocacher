@@ -1,6 +1,6 @@
 {
   "name": "node-geocacher",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Extends node-geocode and provides caching of results into Mongoose",
   "main": "index.js",
   "scripts": {
